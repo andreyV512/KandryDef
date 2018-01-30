@@ -37,7 +37,7 @@ __fastcall TMainForm::TMainForm(TComponent* Owner) : TForm(Owner)
 	ini = new TIniFile(Globals::IniFileName);
 
 	MainForm->Tag = 0; // запуск произведен 1й раз очистка буфера не требуется
-	spectroscope = new Spectroscope();
+	// spectroscope = new Spectroscope();
 }
 
 // ---------------------------------------------------------------------------
@@ -59,6 +59,10 @@ void __fastcall TMainForm::FormCreate(TObject *Sender)
 		TPr::Show();
 	DragAcceptFiles(Handle, true); // Разрешаем перетаскивание файлов
 
+
+
+	Globals::defaultGroupCheck = ini->ReadBool("OtherSettings","IsCalcSolid", 1);
+
 	bool RHKret = RegisterHotKey(MainForm->Handle,
 		// Handle окна, которому отправлять сообщения WM_HOTKEY
 		0x00E, // УСЛОВНЫЙ идентификатор горячего ключа
@@ -75,19 +79,21 @@ void __fastcall TMainForm::FormCreate(TObject *Sender)
 	KeyPreview = true;
 
 	// Работа со спектроскопом
-	if (ini->ReadBool("Spectroscope", "IsPresent", false))
-	{
-		cbSpectrotest->Checked = true;
-		if (!spectroscope->Init(ini))
-		{
-			UnicodeString str = UnicodeString("Не удалось открыть порт ") +
-				spectroscope->getName() +
-				" \nдля приема данных со спестроскопа.";
-			Application->MessageBox(str.c_str(), L"Ошибка");
-			cbSpectrotest->Checked = false;
-			ini->WriteBool("Spectroscope", "IsPresent", false);
-		}
-	}
+	/*
+	 if (ini->ReadBool("Spectroscope", "IsPresent", false))
+	 {
+	 cbSpectrotest->Checked = true;
+	 if (!spectroscope->Init(ini))
+	 {
+	 UnicodeString str = UnicodeString("Не удалось открыть порт ") +
+	 spectroscope->getName() +
+	 " \nдля приема данных со спестроскопа.";
+	 Application->MessageBox(str.c_str(), L"Ошибка");
+	 cbSpectrotest->Checked = false;
+	 ini->WriteBool("Spectroscope", "IsPresent", false);
+	 }
+	 }
+	 */
 
 	Globals::current_typesize = ini->ReadString("Default", "TypeSize", "1");
 	IsSendResultToProtocol = ini->ReadBool("OtherSettings",
@@ -136,7 +142,7 @@ void __fastcall TMainForm::FormCreate(TObject *Sender)
 	sms->StartServer();
 
 	// установи настройки групп прочности
-	SetSolidGroup(Sender); // Не нужно, так как LoadSettings установит сам
+	// SetSolidGroup(Sender); // Не нужно, так как LoadSettings установит сам
 
 	// смотрим, какие модули работают по умолчанию (в последний раз)
 	this->cbLinear->Checked = ini->ReadBool("Default", "IsLinear", true);
@@ -164,11 +170,16 @@ void __fastcall TMainForm::FormCreate(TObject *Sender)
 		StatusBarBottom->Panels->Items[0]->Text = "ПЧ подключен";
 		StatusBarBottom->Refresh();
 	}
+	sg = InitSolid();
+	if (NULL == sg) {
+		Application->MessageBoxW(L"Библиотека группы прочности не загружена",
+			L"Ошибка", MB_OK + MB_ICONERROR);
+	}
 }
 // ---------------------------------------------------------------------------
 
-void __fastcall TMainForm::FormDestroy(TObject *Sender)
-{
+void __fastcall TMainForm::FormDestroy(TObject *Sender) {
+	DestroySolid(&sg);
 	DragAcceptFiles(Handle, false); // Запрещаем перетаскивание файлов
 
 	SLD->oLSOLPOW->Set(false);
@@ -179,7 +190,7 @@ void __fastcall TMainForm::FormDestroy(TObject *Sender)
 	ini->WriteString("Default", "TypeSize", cbTypeSize->Text);
 	ini->WriteBool("Default", "IsLinear", cbLinear->Checked);
 	ini->WriteBool("Default", "IsInterruptView", cbInterruptView->Checked);
-	ini->WriteBool("Spectroscope", "IsPresent", cbSpectrotest->Checked);
+	// ini->WriteBool("Spectroscope", "IsPresent", cbSpectrotest->Checked);
 	delete stats;
 	delete CrossSolenoid;
 	delete LinearSolenoid;
@@ -192,7 +203,7 @@ void __fastcall TMainForm::FormDestroy(TObject *Sender)
 		0x00A); // наш идентификатор горячего ключа
 
 	Singleton::deleteInstance();
-	delete spectroscope;
+	// delete spectroscope;
 	ini->WriteBool("OtherSettings", "SignalsVisible", FSignalsState->Visible);
 	delete FSignalsState;
 	delete SLD;
@@ -539,165 +550,174 @@ void __fastcall TMainForm::eSettingsChange(TObject *Sender)
 }
 
 // ---------------------------------------------------------------------------
-void TMainForm::SetSolidGroup(TObject *Sender)
-{
-	using namespace SolidGroups;
-	int ts = Globals::current_diameter; // текущий типоразмер (диаметр)
-	vector<Tube>etalons; // вектор эталонов из БД
-	if (DM->Connect)
-	{
-		etalons = DM->ReadEtalon(ts);
-		// ---
-		int EtNum = etalons.size();
-		TPr::SendToProtocol("Эталонов ГП загружено: " + IntToStr(EtNum));
-		// читаем эталоны конкретного диаметра из базы
-		if (etalons.empty() || etalons.size() < 3)
-		{
-			StatusBarBottom->Panels->Items[1]->Text =
-				"ЭТАЛОНЫ ГРУППЫ ПРОЧНОСТИ НЕ ОБНАРУЖЕНЫ";
-			StatusBarBottom->Refresh();
-		}
-		else
-		{
-			anal.initEtalons(etalons);
-			StatusBarBottom->Panels->Items[1]->Text =
-				"Эталоны группы прочности загружены";
-			StatusBarBottom->Refresh();
+void TMainForm::SetSolidGroup(TObject *Sender) {
+	/*
+	 using namespace SolidGroups;
+	 int ts = Globals::current_diameter; // текущий типоразмер (диаметр)
+	 vector<Tube>etalons; // вектор эталонов из БД
+	 if (DM->Connect)
+	 {
+	 etalons = DM->ReadEtalon(ts);
+	 // ---
+	 int EtNum = etalons.size();
+	 TPr::SendToProtocol("Эталонов ГП загружено: " + IntToStr(EtNum));
+	 // читаем эталоны конкретного диаметра из базы
+	 if (etalons.empty() || etalons.size() < 3)
+	 {
+	 StatusBarBottom->Panels->Items[1]->Text =
+	 "ЭТАЛОНЫ ГРУППЫ ПРОЧНОСТИ НЕ ОБНАРУЖЕНЫ";
+	 StatusBarBottom->Refresh();
+	 }
+	 else
+	 {
+	 anal.initEtalons(etalons);
+	 StatusBarBottom->Panels->Items[1]->Text =
+	 "Эталоны группы прочности загружены";
+	 StatusBarBottom->Refresh();
 
-			// memo---------------------------------------
-			Memo1->Lines->Add
-				("1-------------------------------------------------------------"
-				);
-			for (int i = 0; i < (int)etalons.size(); i++)
-			{
-				vector<double>buf;
-				buf = etalons[i].Coordinates();
-				UnicodeString tube = (String) etalons[i].solidGroup() + " ";
-				for (int j = 0; j < 8; j++)
-					tube += UnicodeString(buf[j]) + "\t";
-				Memo1->Lines->Add(tube);
-			}
+	 // memo---------------------------------------
+	 Memo1->Lines->Add
+	 ("1-------------------------------------------------------------"
+	 );
+	 for (int i = 0; i < (int)etalons.size(); i++)
+	 {
+	 vector<double>buf;
+	 buf = etalons[i].Coordinates();
+	 UnicodeString tube = (String) etalons[i].solidGroup() + " ";
+	 for (int j = 0; j < 8; j++)
+	 tube += UnicodeString(buf[j]) + "\t";
+	 Memo1->Lines->Add(tube);
+	 }
 
-			vector<Tube>centers;
-			centers = anal.etalonCenters();
-			Memo1->Lines->Add
-				("2-------------------------------------------------------------"
-				);
-			TPr::SendToProtocol("Загружены эталоны группы прочности");
-			// ---
-			int CentNum = centers.size();
-			TPr::SendToProtocol("Центров группы прочности: " +
-				IntToStr(CentNum));
-			for (int i = 0; i < (int)centers.size(); i++)
-			{
-				vector<double>buf;
-				buf = centers[i].Coordinates();
-				UnicodeString tube = (String) centers[i].solidGroup() + " ";
-				for (int j = 0; j < buf.size(); j++)
-					tube += UnicodeString(Math::SimpleRoundTo(buf[j], 0))
-						+ "\t";
-				Memo1->Lines->Add(tube);
-				TPr::SendToProtocol(tube);
-			}
-			// memo ---------------------------------------------------
-		}
-	}
+	 vector<Tube>centers;
+	 centers = anal.etalonCenters();
+	 Memo1->Lines->Add
+	 ("2-------------------------------------------------------------"
+	 );
+	 TPr::SendToProtocol("Загружены эталоны группы прочности");
+	 // ---
+	 int CentNum = centers.size();
+	 TPr::SendToProtocol("Центров группы прочности: " +
+	 IntToStr(CentNum));
+	 for (int i = 0; i < (int)centers.size(); i++)
+	 {
+	 vector<double>buf;
+	 buf = centers[i].Coordinates();
+	 UnicodeString tube = (String) centers[i].solidGroup() + " ";
+	 for (int j = 0; j < buf.size(); j++)
+	 tube += UnicodeString(Math::SimpleRoundTo(buf[j], 0))
+	 + "\t";
+	 Memo1->Lines->Add(tube);
+	 TPr::SendToProtocol(tube);
+	 }
+	 // memo ---------------------------------------------------
+	 }
+	 }
+	 */
 }
 
 // ---------------------------------------------------------------------------
 void TMainForm::IdentifySolidGroup()
 {
 	// *********считаем группу прочности*************************
-	if (!SystemConst::isSolidGroupMS_DOS) // если считаем по старой схеме
-	{
-		using namespace SolidGroups;
-		Group group;
-		map<Group, double>mp;
-		map<Group, double>::iterator it;
-		TPr::SendToProtocol("Определим ГП");
-		if (tubeSG.dimension() >
-			8 && cbSpectrotest->Checked && spectroscope->isDataReady())
-			// Сработал Спектроскоп
-		{
-			TPr::SendToProtocol("Проанализируем ГП");
-			mp = anal.checkTube(tubeSG);
+	/*
+	 if (!SystemConst::isSolidGroupMS_DOS) // если считаем по старой схеме
+	 {
+	 using namespace SolidGroups;
+	 Group group;
+	 map<Group, double>mp;
+	 map<Group, double>::iterator it;
+	 AnsiString a="tubeSG.dimension()=";
+	 a+=tubeSG.dimension();
+	 a+=",cbSpectrotest->Checked=";
+	 a+=cbSpectrotest->Checked?"true":"false";
+	 a+=",spectroscope->isDataReady()=";
+	 a+=spectroscope->isDataReady()?"true":"false";
+	 TPr::pr(a);
+	 if (tubeSG.dimension() >
+	 8 && cbSpectrotest->Checked && spectroscope->isDataReady())
+	 // Сработал Спектроскоп
+	 {
+	 mp = anal.checkTube(tubeSG);
 
-			Memo1->Lines->Add("******* ГП **********");
-			for (it = mp.begin(); it != mp.end(); ++it)
-				Memo1->Lines->Add(" " + (String) it->first + " " +
-				FloatToStrF(it->second, ffFixed, 4, 4));
+	 Memo1->Lines->Add("******* ГП **********");
+	 for (it = mp.begin(); it != mp.end(); ++it)
+	 Memo1->Lines->Add(" " + (String) it->first + " " +
+	 FloatToStrF(it->second, ffFixed, 4, 4));
 
-			double maxValue = 1.0e-8;
+	 double maxValue = 1.0e-8;
 
-			for (it = mp.begin(); it != mp.end(); ++it)
-			{
-				TPr::SendToProtocol("Группа " + (String)it->first +
-					" вероятность " + Math::SimpleRoundTo(it->second,
-					-3)*100.0 + " %");
-				if (it->second > maxValue)
-				{
-					maxValue = it->second;
-					group = it->first;
-				}
-			}
-			pSolidGroup->Color = clYellow;
-			if (maxValue > 0.4)
-			{
-				pSolidGroup->Caption = (String)group;
-				tubeSG.setSolidGroup(group);
-				Globals::tubeSG.setSolidGroup(group);
-				manual_num = group.GroupToNumber(); // костыль
-			}
-			else // НЕ ОПРЕДЕЛЕНО !
-			{
+	 for (it = mp.begin(); it != mp.end(); ++it)
+	 {
+	 TPr::SendToProtocol("Группа " + (String)it->first +
+	 " вероятность " + Math::SimpleRoundTo(it->second,
+	 -3)*100.0 + " %");
+	 if (it->second > maxValue)
+	 {
+	 maxValue = it->second;
+	 group = it->first;
+	 }
+	 }
+	 pSolidGroup->Color = clYellow;
+	 if (maxValue > 0.4)
+	 {
+	 pSolidGroup->Caption = (String)group;
+	 tubeSG.setSolidGroup(group);
+	 Globals::tubeSG.setSolidGroup(group);
+	 manual_num = group.GroupToNumber(); // костыль
+	 }
+	 else // НЕ ОПРЕДЕЛЕНО !
+	 {
 
-				pSolidGroup->Caption =
-					ini->ReadString("OtherSettings", "StandartSolidGroup", "K");
-				group = Group((UnicodeString)ini->ReadString("OtherSettings",
-					"StandartSolidGroup", "K"));
-				tubeSG.setSolidGroup(group);
+	 pSolidGroup->Caption =
+	 ini->ReadString("OtherSettings", "StandartSolidGroup", "K");
+	 group = Group((UnicodeString)ini->ReadString("OtherSettings",
+	 "StandartSolidGroup", "K"));
+	 tubeSG.setSolidGroup(group);
 
-				Globals::tubeSG.setSolidGroup(group);
-			}
-		}
-		else // Нет химсостава
-		{
+	 Globals::tubeSG.setSolidGroup(group);
+	 }
+	 }
+	 else // Нет химсостава
+	 {
+	 TPr::SendToProtocol("нет химсостава");
 
-			pSolidGroup->Caption =
-				ini->ReadString("OtherSettings", "StandartSolidGroup", "K");
-			group = Group((UnicodeString)ini->ReadString("OtherSettings",
-				"StandartSolidGroup", "K"));
-			tubeSG.setSolidGroup(group);
-
-			Globals::tubeSG.setSolidGroup(group);
-		}
-		pSolidGroup->Refresh();
-	}
-	else // если считаем через коэффициенты корреляции (c помощью проги MS-DOS)
-	{
-		using namespace SolidGroups;
-		String result = tubeSG.calcSolidGroup(tubeSG.Coordinates());
-		result = tubeSG.calcSolidGroup(tubeSG.Coordinates());
-		pSolidGroup->Caption = result;
-		if (result == "K")
-		{
-			pSolidGroup->Color = clGreen;
-			// Globals::tubeSG.setSolidGroup(Group::Types::sgK);
-			tubeSG.setSolidGroup(Group::Types::sgK);
-		}
-		else if (result == "E")
-		{
-			pSolidGroup->Color = clBlue;
-			// Globals::tubeSG.setSolidGroup(Group::Types::sgE);
-			tubeSG.setSolidGroup(Group::Types::sgE);
-		}
-		else
-		{
-			pSolidGroup->Color = clYellow;
-			// Globals::tubeSG.setSolidGroup(Group::Types::sgD);
-			tubeSG.setSolidGroup(Group::Types::sgD);
-		}
-	}
+	 pSolidGroup->Caption =
+	 ini->ReadString("OtherSettings", "StandartSolidGroup", "K");
+	 group = Group((UnicodeString)ini->ReadString("OtherSettings",
+	 "StandartSolidGroup", "K"));
+	 tubeSG.setSolidGroup(group);
+	 Globals::tubeSG.setSolidGroup(group);
+	 TPr::SendToProtocol("установили ГП");
+	 }
+	 pSolidGroup->Refresh();
+	 }
+	 else // если считаем через коэффициенты корреляции (c помощью проги MS-DOS)
+	 {
+	 using namespace SolidGroups;
+	 String result = tubeSG.calcSolidGroup(tubeSG.Coordinates());
+	 result = tubeSG.calcSolidGroup(tubeSG.Coordinates());
+	 pSolidGroup->Caption = result;
+	 if (result == "K")
+	 {
+	 pSolidGroup->Color = clGreen;
+	 // Globals::tubeSG.setSolidGroup(Group::Types::sgK);
+	 tubeSG.setSolidGroup(Group::Types::sgK);
+	 }
+	 else if (result == "E")
+	 {
+	 pSolidGroup->Color = clBlue;
+	 // Globals::tubeSG.setSolidGroup(Group::Types::sgE);
+	 tubeSG.setSolidGroup(Group::Types::sgE);
+	 }
+	 else
+	 {
+	 pSolidGroup->Color = clYellow;
+	 // Globals::tubeSG.setSolidGroup(Group::Types::sgD);
+	 tubeSG.setSolidGroup(Group::Types::sgD);
+	 }
+	 }
+	 */
 }
 
 // -----------------------------------------------------------------------------
@@ -840,8 +860,11 @@ void __fastcall TMainForm::bWorkClick(TObject *Sender)
 
 	// Начало работы
 	StatusBarBottom->Refresh();
-	workonline = new ThreadOnLine(false, cbLinear->Checked,
-		cbSpectrotest->Checked, spectroscope);
+	 //workonline = new ThreadOnLine(false, cbLinear->Checked,
+	 //cbSpectrotest->Checked, spectroscope);
+
+		 workonline = new ThreadOnLine(false, cbLinear->Checked,
+	 false, NULL);//spectroscope);
 
 	workonline->OnTerminate = CompleteWork;
 	workonline->FreeOnTerminate = true;
@@ -863,11 +886,11 @@ void __fastcall TMainForm::bCancelWorkClick(TObject *Sender)
 		}
 	}
 	SLD->SetAlarm(false);
-	if (cbSpectrotest->Checked)
-	{
-		TPr::SendToProtocol("Закрываем сбор данных от спектроскопа...");
-		spectroscope->Stop();
-	}
+	// if (cbSpectrotest->Checked)
+	// {
+	// TPr::SendToProtocol("Закрываем сбор данных от спектроскопа...");
+	// spectroscope->Stop();
+	// }
 	StatusBarTop->Panels->Items[1]->Text = "Режим \"Работа\" не завершен!";
 	StatusBarTop->Panels->Items[2]->Text = "Прервано пользователем!";
 	TPr::SendToProtocol("Прервано пользователем!");
@@ -895,49 +918,80 @@ void __fastcall TMainForm::CompleteWork(TObject *Sender)
 				(LinearDefectChart, MainForm);
 			CrossDefectChart->Refresh();
 			LinearDefectChart->Refresh();
+			/*
+			 // ждем получения группы прочности
+			 if (SystemConst::isSolidity)
+			 {
+			 TPr::SendToProtocol("Ждем получения группы прочности");
 
-			// ждем получения группы прочности
-			if (SystemConst::isSolidity)
-			{
-				TPr::SendToProtocol("Ждем получения группы прочности");
+			 using namespace SolidGroups;
+			 vector<double>buffer = lcard->getSolidGroupSignal();
+			 // Берем вектор
+			 tubeSG = Tube(buffer, TubeType(Globals::current_diameter));
+			 // Считаем сигнал
+			 // Если был запущен спектротест получаем данные
+			 if (cbSpectrotest->Checked && spectroscope)
+			 {
+			 if (spectroscope->isDataReady())
+			 {
+			 spectroscope->AddSpectroDataToSGTube(&tubeSG);
+			 TPr::SendToProtocol
+			 ("Получены данные ГП со спектроскопа");
+			 // delete spectroscope;
+			 // spectroscope=NULL;
+			 // ------
+			 vector<double>Coords = tubeSG.Coordinates();
+			 if (Coords.size() == 0)
+			 {
+			 TPr::SendToProtocol("Нет координат ГП");
+			 }
+			 else
+			 {
+			 for (int i = 0; i < Coords.size(); i++)
+			 TPr::SendToProtocol
+			 ("Координата ГП" + IntToStr(i + 1) + " : " +
+			 FloatToStr(Coords[i]));
+			 }
+			 // ------
+			 }
+			 }
+			 Globals::tubeSG = tubeSG;
 
-				using namespace SolidGroups;
-				vector<double>buffer = lcard->getSolidGroupSignal();
-				// Берем вектор
-				tubeSG = Tube(buffer, TubeType(Globals::current_diameter));
-				// Считаем сигнал
-				// Если был запущен спектротест получаем данные
-				if (cbSpectrotest->Checked && spectroscope)
-				{
-					if (spectroscope->isDataReady())
-					{
-						spectroscope->AddSpectroDataToSGTube(&tubeSG);
-						TPr::SendToProtocol
-							("Получены данные ГП со спектроскопа");
-						// delete spectroscope;
-						// spectroscope=NULL;
-						// ------
-						vector<double>Coords = tubeSG.Coordinates();
-						if (Coords.size() == 0)
-						{
-							TPr::SendToProtocol("Нет координат ГП");
-						}
-						else
-						{
-							for (int i = 0; i < Coords.size(); i++)
-								TPr::SendToProtocol
-									("Координата ГП" + IntToStr(i + 1) + " : " +
-								FloatToStr(Coords[i]));
-						}
-						// ------
-					}
-				}
-				Globals::tubeSG = tubeSG;
+			 StatusBarTop->Refresh();
+			 IdentifySolidGroup(); // пытаемся опеределить ГП
 
-				StatusBarTop->Refresh();
-				IdentifySolidGroup(); // пытаемся опеределить ГП
+			 }
+			 //Писать расчёт группы прочности конец
+			 */
 
+			// Писать расчёт группы прочности
+			if(!Globals::defaultGroupCheck)
+		  {
+			if (NULL != sg) {
+				vector<double>data = lcard->getSolidGroupSignal();
+				wchar_t groupName[128];
+				double result;
+				unsigned color;
+
+				sg->Compute1(Globals::current_typesize.w_str(),
+					(int)lcard->getSettings().frequencyPerChannel, &data[0],
+					data.size() / 2, groupName, &result, &color);
+
+				pSolidGroup->Caption = groupName;
+				pSolidGroup->Color = clWhite;//color;
+				pSolidGroup->Refresh();
+			   //	Caption = groupName;
 			}
+			else
+			{
+				pSolidGroup->Caption = ini->ReadString("OtherSettings", "StandartSolidGroup", "D");
+            }
+			}
+			else
+			{
+				pSolidGroup->Caption = ini->ReadString("OtherSettings", "StandartSolidGroup", "D");
+			}
+			// Писать расчёт группы прочности конец
 
 			Singleton::Instance()->SumResult->ComputeZonesData();
 			Singleton::Instance()->SumResult->PutResultOnChart(SummaryChart,
@@ -1119,6 +1173,32 @@ void __fastcall TMainForm::menuSaveTubeClick(TObject *Sender)
 
 		Singleton::Instance()->ThResult->SaveTubeToFile
 			(SaveToFileDialog->FileName); // Толщинометрия (только zone_data)
+		  if(!Globals::defaultGroupCheck)
+		  {
+			if (NULL != sg) {
+				vector<double>data = lcard->getSolidGroupSignal();
+				wchar_t groupName[128];
+				double result;
+				unsigned color;
+
+				sg->Compute1(Globals::current_typesize.w_str(),
+					(int)lcard->getSettings().frequencyPerChannel, &data[0],
+					data.size() / 2, groupName, &result, &color);
+
+				pSolidGroup->Caption = groupName;
+				pSolidGroup->Color = clWhite;//color;
+				pSolidGroup->Refresh();
+			   //	Caption = groupName;
+			}
+			else
+			{
+				pSolidGroup->Caption = ini->ReadString("OtherSettings", "StandartSolidGroup", "D");
+            }
+			}
+			else
+			{
+				pSolidGroup->Caption = ini->ReadString("OtherSettings", "StandartSolidGroup", "D");
+			}
 	}
 }
 
@@ -1269,7 +1349,7 @@ void TMainForm::SetAbleButtons(bool state, TButton *exc1, TMenuItem *exc2,
 {
 	this->cbLinear->Enabled = state;
 	this->cbTypeSize->Enabled = state;
-	this->cbSpectrotest->Enabled = state;
+	// this->cbSpectrotest->Enabled = state;
 	this->bTest->Enabled = state;
 	this->bView->Enabled = state;
 	this->bWork->Enabled = state;
@@ -1296,8 +1376,8 @@ void TMainForm::SetAbleButtons(bool state, TButton *exc1, TMenuItem *exc2,
 	this->menuTest->Enabled = state;
 	this->menuTestAdvantech->Enabled = state;
 	// this->menuTestLcard->Enabled     	 = state;
-	this->menuSGTest->Enabled = state;
-	this->menuWork->Enabled = state;
+	// this->menuSGTest->Enabled = state;
+	// this->menuWork->Enabled = state;
 	this->menuCrashForward->Enabled = state;
 	this->menuReturnMode->Enabled = state;
 	this->menuManagement->Enabled = state;
@@ -1597,129 +1677,176 @@ void TMainForm::SendResultToASM(void)
 }
 
 // --------------------------------------------------------------------------------
-void __fastcall TMainForm::menuTestSpectroscopeClick(TObject *Sender)
+void __fastcall TMainForm::menuTestSpectroscopeClick(TObject *Sender) {
+	/*
+	 spectroscope->Init(ini);
+	 map<string, double>spectroResult;
+	 TPr::SendToProtocol("Запускаем сбор данных от спектроскопа...");
+	 spectroscope->Start();
+	 unsigned long tick = GetTickCount();
+	 bool bSpectroAnswer = false;
+	 while (GetTickCount() - tick < 10000)
+	 {
+	 Application->ProcessMessages();
+	 if (spectroscope->isDataReady())
+	 {
+	 bSpectroAnswer = true;
+	 TPr::SendToProtocol("Получены данные спектроскопа:");
+	 spectroResult = spectroscope->getSpectroData();
+	 UnicodeString data = "";
+	 for (map<string, double>::iterator i = spectroResult.begin();
+	 i != spectroResult.end(); i++)
+	 {
+	 data += UnicodeString((*i).first.c_str()) + " : " +
+	 FloatToStr(RoundTo((*i).second,-3)) + "; ";
+	 //FloatToStr((float)(*i).second) + "; ";
+	 }
+	 TPr::SendToProtocol(data);
+	 }
+	 }
+	 if (!bSpectroAnswer)
+	 TPr::SendToProtocol("Нет данных со спектроскопа.");
+	 spectroscope->Stop();
+	 TPr::SendToProtocol("Спектроскоп закрыт.");
+	 */
+}
+
+// ---------------------------------------------------------------------------
+
+void __fastcall TMainForm::menuSpectroSettingsClick(TObject *Sender) {
+	/*
+	 SpectroSettingForm = new TSpectroSettingForm(this);
+	 String str;
+	 int index;
+
+	 // Считываем данные для спектроскопа
+	 // ! Имя порта
+	 index = SpectroSettingForm->cbxSerialPort->Items->IndexOf
+	 (ini->ReadString("Spectroscope", "SerialPortName", "COM1"));
+	 SpectroSettingForm->cbxSerialPort->ItemIndex = index;
+	 // Скорость порта
+	 index = SpectroSettingForm->cbxBaudrate->Items->IndexOf
+	 (String(ini->ReadInteger("Spectroscope", "SerialBaudRate", 9600)));
+	 SpectroSettingForm->cbxBaudrate->ItemIndex = index;
+
+	 switch (ini->ReadInteger("Spectroscope", "SerialStopBits", 1))
+	 {
+	 case 2:
+	 str = L"2";
+	 break;
+	 case 3:
+	 str = L"1.5";
+	 break;
+	 case 1:
+	 default:
+	 str = L"1";
+	 };
+
+	 index = SpectroSettingForm->cbxStopBits->Items->IndexOf(str);
+	 SpectroSettingForm->cbxStopBits->ItemIndex = index;
+
+	 switch (ini->ReadInteger("Spectroscope", "SerialParity", 0))
+	 {
+	 case 1:
+	 str = L"Чётный";
+	 break;
+	 case 2:
+	 str = L"Нечётный";
+	 break;
+	 case 0:
+	 default:
+	 str = L"Отсутствует";
+	 break;
+	 };
+	 index = SpectroSettingForm->cbxParity->Items->IndexOf(str);
+	 SpectroSettingForm->cbxParity->ItemIndex = index;
+
+	 if (SpectroSettingForm->ShowModal() == mrOk)
+	 {
+	 ini->WriteString("Spectroscope", "SerialPortName",
+	 SpectroSettingForm->cbxSerialPort->Text);
+	 ini->WriteInteger("Spectroscope", "SerialBaudRate",
+	 SpectroSettingForm->cbxBaudrate->Text.ToInt());
+	 int serialStopBits;
+	 if (SpectroSettingForm->cbxStopBits->Text == "2")
+	 serialStopBits = 2;
+	 else if (SpectroSettingForm->cbxStopBits->Text == "1.5")
+	 serialStopBits = 1;
+	 else
+	 serialStopBits = 0;
+	 ini->WriteInteger("Spectroscope", "SerialStopBits", serialStopBits);
+	 int serialParity;
+	 if (SpectroSettingForm->cbxParity->Text == "Отсутствует")
+	 serialParity = 0;
+	 else if (SpectroSettingForm->cbxParity->Text == "Чётный")
+	 serialParity = 1;
+	 else if (SpectroSettingForm->cbxParity->Text == "Нечётный")
+	 serialParity = 2;
+	 ini->WriteInteger("Spectroscope", "SerialParity", serialParity);
+	 if (!spectroscope->Init(ini))
+	 {
+	 UnicodeString str = UnicodeString("Не удалось открыть порт ") +
+	 spectroscope->getName() +
+	 " \nдля приема данных со спестроскопа.";
+	 Application->MessageBox(str.c_str(), L"Ошибка");
+	 cbSpectrotest->Checked = false;
+	 ini->WriteBool("Spectroscope", "IsPresent", false);
+	 }
+	 }
+	 delete SpectroSettingForm;
+	 */
+}
+
+// ---------------------------------------------------------------------------
+void __fastcall TMainForm::cbSpectrotestClick(TObject *Sender) {
+	// ini->WriteBool("Spectroscope", "IsPresent", cbSpectrotest->Enabled);
+	// if (cbSpectrotest->Enabled)
+	// spectroscope->Init(ini);
+}
+
+// ---------------------------------------------------------------------------
+void __fastcall TMainForm::SolidGroupClick(TObject *Sender) {
+	if (NULL != sg) {
+		vector<double>data = lcard->getSolidGroupSignal();
+		wchar_t groupName[128];
+		double result;
+		unsigned color;
+		int size = data.size();
+			sg->Compute1(Globals::current_typesize.w_str(),
+				(int)lcard->getSettings().frequencyPerChannel, &data[0],
+				data.size() / 2, groupName, &result, &color);
+		sg->OptionsWindow();
+	}
+}
+// ---------------------------------------------------------------------------
+void __fastcall TMainForm::pSolidGroupClick(TObject *Sender)
 {
-	spectroscope->Init(ini);
-	map<string, double>spectroResult;
-	TPr::SendToProtocol("Запускаем сбор данных от спектроскопа...");
-	spectroscope->Start();
-	unsigned long tick = GetTickCount();
-	bool bSpectroAnswer = false;
-	while (GetTickCount() - tick < 10000)
-	{
-		Application->ProcessMessages();
-		if (spectroscope->isDataReady())
-		{
-			bSpectroAnswer = true;
-			TPr::SendToProtocol("Получены данные спектроскопа:");
-			spectroResult = spectroscope->getSpectroData();
-			UnicodeString data = "";
-			for (map<string, double>::iterator i = spectroResult.begin();
-			i != spectroResult.end(); i++)
-			{
-				data += UnicodeString((*i).first.c_str()) + " : " +
-					FloatToStr(RoundTo((*i).second,-3)) + "; ";
-					//FloatToStr((float)(*i).second) + "; ";
+    	if(!Globals::defaultGroupCheck)
+		  {
+			if (NULL != sg) {
+				vector<double>data = lcard->getSolidGroupSignal();
+				wchar_t groupName[128];
+				double result;
+				unsigned color;
+
+				sg->Compute1(Globals::current_typesize.w_str(),
+					(int)lcard->getSettings().frequencyPerChannel, &data[0],
+					data.size() / 2, groupName, &result, &color);
+
+				pSolidGroup->Caption = groupName;
+				pSolidGroup->Color = clWhite;//color;
+				pSolidGroup->Refresh();
+			   //	Caption = groupName;
 			}
-			TPr::SendToProtocol(data);
-		}
-	}
-	if (!bSpectroAnswer)
-		TPr::SendToProtocol("Нет данных со спектроскопа.");
-	spectroscope->Stop();
-	TPr::SendToProtocol("Спектроскоп закрыт.");
+			else
+			{
+				pSolidGroup->Caption = ini->ReadString("OtherSettings", "StandartSolidGroup", "D");
+            }
+			}
+			else
+			{
+				pSolidGroup->Caption = ini->ReadString("OtherSettings", "StandartSolidGroup", "D");
+			}
 }
+//---------------------------------------------------------------------------
 
-// ---------------------------------------------------------------------------
-
-void __fastcall TMainForm::menuSpectroSettingsClick(TObject *Sender)
-{
-	SpectroSettingForm = new TSpectroSettingForm(this);
-	String str;
-	int index;
-
-	// Считываем данные для спектроскопа
-	// ! Имя порта
-	index = SpectroSettingForm->cbxSerialPort->Items->IndexOf
-		(ini->ReadString("Spectroscope", "SerialPortName", "COM1"));
-	SpectroSettingForm->cbxSerialPort->ItemIndex = index;
-	// Скорость порта
-	index = SpectroSettingForm->cbxBaudrate->Items->IndexOf
-		(String(ini->ReadInteger("Spectroscope", "SerialBaudRate", 9600)));
-	SpectroSettingForm->cbxBaudrate->ItemIndex = index;
-
-	switch (ini->ReadInteger("Spectroscope", "SerialStopBits", 1))
-	{
-	case 2:
-		str = L"2";
-		break;
-	case 3:
-		str = L"1.5";
-		break;
-	case 1:
-	default:
-		str = L"1";
-	};
-
-	index = SpectroSettingForm->cbxStopBits->Items->IndexOf(str);
-	SpectroSettingForm->cbxStopBits->ItemIndex = index;
-
-	switch (ini->ReadInteger("Spectroscope", "SerialParity", 0))
-	{
-	case 1:
-		str = L"Чётный";
-		break;
-	case 2:
-		str = L"Нечётный";
-		break;
-	case 0:
-	default:
-		str = L"Отсутствует";
-		break;
-	};
-	index = SpectroSettingForm->cbxParity->Items->IndexOf(str);
-	SpectroSettingForm->cbxParity->ItemIndex = index;
-
-	if (SpectroSettingForm->ShowModal() == mrOk)
-	{
-		ini->WriteString("Spectroscope", "SerialPortName",
-			SpectroSettingForm->cbxSerialPort->Text);
-		ini->WriteInteger("Spectroscope", "SerialBaudRate",
-			SpectroSettingForm->cbxBaudrate->Text.ToInt());
-		int serialStopBits;
-		if (SpectroSettingForm->cbxStopBits->Text == "2")
-			serialStopBits = 2;
-		else if (SpectroSettingForm->cbxStopBits->Text == "1.5")
-			serialStopBits = 1;
-		else
-			serialStopBits = 0;
-		ini->WriteInteger("Spectroscope", "SerialStopBits", serialStopBits);
-		int serialParity;
-		if (SpectroSettingForm->cbxParity->Text == "Отсутствует")
-			serialParity = 0;
-		else if (SpectroSettingForm->cbxParity->Text == "Чётный")
-			serialParity = 1;
-		else if (SpectroSettingForm->cbxParity->Text == "Нечётный")
-			serialParity = 2;
-		ini->WriteInteger("Spectroscope", "SerialParity", serialParity);
-		if (!spectroscope->Init(ini))
-		{
-			UnicodeString str = UnicodeString("Не удалось открыть порт ") +
-				spectroscope->getName() +
-				" \nдля приема данных со спестроскопа.";
-			Application->MessageBox(str.c_str(), L"Ошибка");
-			cbSpectrotest->Checked = false;
-			ini->WriteBool("Spectroscope", "IsPresent", false);
-		}
-	}
-	delete SpectroSettingForm;
-}
-
-// ---------------------------------------------------------------------------
-void __fastcall TMainForm::cbSpectrotestClick(TObject *Sender)
-{
-	ini->WriteBool("Spectroscope", "IsPresent", cbSpectrotest->Enabled);
-	if (cbSpectrotest->Enabled)
-		spectroscope->Init(ini);
-}
-// ---------------------------------------------------------------------------

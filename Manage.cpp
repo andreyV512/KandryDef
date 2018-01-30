@@ -175,3 +175,4 @@ void __fastcall TManageForm::TimerTimer(TObject *Sender)
 	}
 }
 // ---------------------------------------------------------------------------
+

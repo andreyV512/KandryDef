@@ -1,7 +1,7 @@
 object MainForm: TMainForm
   Left = -44
   Top = 0
-  Caption = #1052#1086#1076#1091#1083#1100' '#1101#1083#1077#1082#1090#1088#1086#1084#1072#1075#1085#1080#1090#1085#1086#1081' '#1076#1077#1092#1077#1082#1090#1086#1089#1082#1086#1087#1080#1080
+  Caption = #1041#1059#1056#1040#1053'-5000. '#1052#1072#1075#1085#1080#1090#1086#1080#1085#1076#1091#1082#1094#1080#1086#1085#1085#1072#1103' '#1076#1077#1092#1077#1082#1090#1086#1089#1082#1086#1087#1080#1103' '#1053#1050#1058'.'
   ClientHeight = 794
   ClientWidth = 1284
   Color = clBtnFace
@@ -1690,15 +1690,6 @@ object MainForm: TMainForm
     ExplicitWidth = 247
     ExplicitHeight = 30
   end
-  object cbSpectrotest: TCheckBox
-    Left = 566
-    Top = 102
-    Width = 97
-    Height = 17
-    Caption = #1057#1087#1077#1082#1090#1088#1086#1090#1077#1089#1090
-    TabOrder = 22
-    OnClick = cbSpectrotestClick
-  end
   object MainMenu: TMainMenu
     Left = 1088
     object menuJob: TMenuItem
@@ -1743,10 +1734,6 @@ object MainForm: TMainForm
       object menuColors: TMenuItem
         Caption = #1053#1072#1089#1090#1088#1086#1081#1082#1080' '#1094#1074#1077#1090#1072
         OnClick = menuColorsClick
-      end
-      object menuSpectroSettings: TMenuItem
-        Caption = #1057#1087#1077#1082#1090#1088#1086#1089#1082#1086#1087
-        OnClick = menuSpectroSettingsClick
       end
     end
     object menuTube: TMenuItem
@@ -1806,33 +1793,10 @@ object MainForm: TMainForm
         Caption = #1058#1077#1089#1090' '#1089#1074#1103#1079#1080' '#1089' '#1040#1057#1059
         OnClick = MIASMTestClick
       end
-      object menuTestSpectroscope: TMenuItem
-        Caption = #1058#1077#1089#1090' '#1089#1087#1077#1082#1090#1088#1086#1089#1082#1086#1087#1072
-        OnClick = menuTestSpectroscopeClick
-      end
     end
     object SolidGroup: TMenuItem
       Caption = #1043#1088#1091#1087#1087#1072' '#1087#1088#1086#1095#1085#1086#1089#1090#1080
-      object menuSGTest: TMenuItem
-        Caption = #1058#1077#1089#1090' '#1075#1088#1091#1087#1087#1099' '#1087#1088#1086#1095#1085#1086#1089#1090#1080
-        ShortCut = 16497
-        OnClick = menuSGTestClick
-      end
-      object menuGraphicsSG: TMenuItem
-        Caption = #1043#1088#1072#1092#1080#1082#1080' '#1043#1055
-        ShortCut = 16506
-        OnClick = menuGraphicsSGClick
-      end
-      object menuSolidGroup: TMenuItem
-        Caption = #1044#1086#1073#1072#1074#1080#1090#1100' '#1101#1090#1072#1083#1086#1085
-        ShortCut = 16499
-        OnClick = menuSolidGroupClick
-      end
-      object menuViewEtalons: TMenuItem
-        Caption = #1055#1088#1086#1089#1084#1086#1090#1088' '#1101#1090#1072#1083#1086#1085#1086#1074' '#1043#1055
-        ShortCut = 16498
-        OnClick = menuViewEtalonsClick
-      end
+      OnClick = SolidGroupClick
     end
     object menuHelp: TMenuItem
       Caption = #1055#1086#1084#1086#1097#1100
