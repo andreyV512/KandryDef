@@ -190,12 +190,12 @@ object MainForm: TMainForm
       DepthAxis.Automatic = False
       DepthAxis.AutomaticMaximum = False
       DepthAxis.AutomaticMinimum = False
-      DepthAxis.Maximum = 8.240000000000016000
+      DepthAxis.Maximum = 8.240000000000017000
       DepthAxis.Minimum = 7.240000000000023000
       DepthTopAxis.Automatic = False
       DepthTopAxis.AutomaticMaximum = False
       DepthTopAxis.AutomaticMinimum = False
-      DepthTopAxis.Maximum = 8.240000000000016000
+      DepthTopAxis.Maximum = 8.240000000000017000
       DepthTopAxis.Minimum = 7.240000000000023000
       LeftAxis.Automatic = False
       LeftAxis.AutomaticMaximum = False

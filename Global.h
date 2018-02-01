@@ -49,9 +49,12 @@ public:
 	static const int Cross_sensors=12;
 	// ! параметр частотника в котором хранится скорость врщения
 	static const int defaultRotParameter=4;
+	static bool defaultGroupCheck;
 private:
 
 };
+
+bool Globals::defaultGroupCheck = false;
 
 String Globals::current_typesize=L"2";
 int Globals::current_diameter=2;
