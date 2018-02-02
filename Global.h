@@ -29,8 +29,10 @@ public:
 	static String PathFile_threshold_sg;
 	// ! Номер трубы
 	static AnsiString tube_number;
-	// ! Номер трубы
+	// ! В транзите ли труба
 	static bool tube_transit;
+	// ! Зона дефекта по шаблону
+	static int plant_cut;         //Брак по шаблону 20170927
 	// ! Труба с характеристиками группы прочности
 	static SolidGroups::Tube tubeSG;
 
@@ -61,6 +63,7 @@ String Globals::IniFileName="..\\..\\Settings\\SettingsDefectoscope.ini";
 String Globals::SignalsFileName="..\\..\\Settings\\IO_Management.ini";
 AnsiString Globals::tube_number="";
 bool Globals::tube_transit;
+int Globals::plant_cut = 0;
 SolidGroups::Tube Globals::tubeSG=SolidGroups::Tube();
 
 // -------------------------------------------------------------------------------------------

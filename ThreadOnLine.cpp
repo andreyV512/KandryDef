@@ -416,7 +416,9 @@ bool ThreadOnLine::OnlineCycle()
 		// -----------------------------------------------------------------------------------------------------------------
 		// смотрим, что труба вышла из установки
 		if (SLD->iSGTUBE->WasConst(false,
-			50) && ppStarted && !SLD->iCCONTROL->Get())
+			50) && ppStarted && !SLD->iCCONTROL->Get()
+			&& (!prStarted || prStarted && !SLD->iLCONTROL->Get())
+			)
 		{
 			stext2 = "Труба вышла из установки";
 			Synchronize(UpdateStatus);
