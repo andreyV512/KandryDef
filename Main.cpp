@@ -61,7 +61,7 @@ void __fastcall TMainForm::FormCreate(TObject *Sender)
 
 
 
-	Globals::defaultGroupCheck = ini->ReadBool("OtherSettings","IsCalcSolid", 1);
+	bool bl = Globals::defaultGroupCheck = ini->ReadBool("OtherSettings","IsCalcSolid", 1);
 
 	bool RHKret = RegisterHotKey(MainForm->Handle,
 		// Handle окна, которому отправлять сообщения WM_HOTKEY
