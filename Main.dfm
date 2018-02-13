@@ -2,7 +2,7 @@ object MainForm: TMainForm
   Left = -44
   Top = 0
   Caption = #1041#1059#1056#1040#1053'-5000. '#1052#1072#1075#1085#1080#1090#1086#1080#1085#1076#1091#1082#1094#1080#1086#1085#1085#1072#1103' '#1076#1077#1092#1077#1082#1090#1086#1089#1082#1086#1087#1080#1103' '#1053#1050#1058'.'
-  ClientHeight = 794
+  ClientHeight = 781
   ClientWidth = 1284
   Color = clBtnFace
   Constraints.MinHeight = 840
@@ -190,12 +190,12 @@ object MainForm: TMainForm
       DepthAxis.Automatic = False
       DepthAxis.AutomaticMaximum = False
       DepthAxis.AutomaticMinimum = False
-      DepthAxis.Maximum = 8.240000000000017000
+      DepthAxis.Maximum = 8.240000000000016000
       DepthAxis.Minimum = 7.240000000000023000
       DepthTopAxis.Automatic = False
       DepthTopAxis.AutomaticMaximum = False
       DepthTopAxis.AutomaticMinimum = False
-      DepthTopAxis.Maximum = 8.240000000000017000
+      DepthTopAxis.Maximum = 8.240000000000016000
       DepthTopAxis.Minimum = 7.240000000000023000
       LeftAxis.Automatic = False
       LeftAxis.AutomaticMaximum = False
@@ -1401,7 +1401,7 @@ object MainForm: TMainForm
   object StatusBarBottom: TStatusBar
     AlignWithMargins = True
     Left = 3
-    Top = 760
+    Top = 747
     Width = 1278
     Height = 31
     Panels = <

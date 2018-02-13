@@ -226,9 +226,6 @@ __published:	// IDE-managed Components
 	void __fastcall N2Click(TObject *Sender);
 	void __fastcall Button2Click(TObject *Sender);
 	void __fastcall MIASMTestClick(TObject *Sender);
-	void __fastcall menuTestSpectroscopeClick(TObject *Sender);
-	void __fastcall menuSpectroSettingsClick(TObject *Sender);
-	void __fastcall cbSpectrotestClick(TObject *Sender);
 	void __fastcall TimerThreadCompleteTimer(TObject *Sender);
 	void __fastcall SolidGroupClick(TObject *Sender);
 	void __fastcall pSolidGroupClick(TObject *Sender);

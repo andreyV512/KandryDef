@@ -1628,26 +1628,36 @@ void TMainForm::SendResultToASM(void)
 	LastSynchronizeReturnCode = false;
 	if (SystemConst::ComWithASU)
 	{
+/*
+ // ' 0-(-), 1-D, 2-K, 3-E, 4-N80, 5-P (P110), 6-Q (Q125),
+// 7-L, 8-M, 9-P, 10-J55 (J-55), 11-K55 (K-55), 12-C90, 13-T95, 14-H40, 15-L80
+, 16-C95, 17-M65, 18-NQ(N80Q)'*/
 		if (MyCom->IsOpened())
 		{
 			int solid_num = 0;
 			//------------------
 			AnsiString StandartSolidGroup
 				= ini->ReadString("OtherSettings","StandartSolidGroup","D");
-			if (StandartSolidGroup == "D")
-				solid_num = 1;
-			else if (StandartSolidGroup == "K")
-				solid_num = 2;
-			else if (StandartSolidGroup == "E")
-				solid_num = 3;
+			if (StandartSolidGroup == "D")solid_num = 1;
+			else if (StandartSolidGroup == "K")solid_num = 2;
+			else if (StandartSolidGroup == "E")solid_num = 3;
+			else if (StandartSolidGroup == "N80")solid_num = 4;
+			else if (StandartSolidGroup == "P110")solid_num = 5;
+			else if (StandartSolidGroup == "Q125")solid_num = 6;
+			else if (StandartSolidGroup == "L")solid_num = 7;
+			else if (StandartSolidGroup == "M")solid_num = 8;
+			else if (StandartSolidGroup == "P")solid_num = 9;
+			else if (StandartSolidGroup == "J-55")solid_num = 10;
+			else if (StandartSolidGroup == "K-55")solid_num = 11;
+			else if (StandartSolidGroup == "C90")solid_num = 12;
+			else if (StandartSolidGroup == "T95")solid_num = 13;
+			else if (StandartSolidGroup == "H40")solid_num = 14;
+			else if (StandartSolidGroup == "L80")solid_num = 15;
+			else if (StandartSolidGroup == "C95")solid_num = 16;
+			else if (StandartSolidGroup == "M65")solid_num = 17;
+			else if (StandartSolidGroup == "N80Q")solid_num = 18;
 			else solid_num = 1;
 			//------------------------
-//			if (pSolidGroup->Caption == "D")
-//				solid_num = 1;
-//			else if (pSolidGroup->Caption == "K")
-//				solid_num = 2;
-//			else if (pSolidGroup->Caption == "E")
-//				solid_num = 3;
 			int iter = 0;
 			while (true)
 			{
@@ -1677,134 +1687,7 @@ void TMainForm::SendResultToASM(void)
 }
 
 // --------------------------------------------------------------------------------
-void __fastcall TMainForm::menuTestSpectroscopeClick(TObject *Sender) {
-	/*
-	 spectroscope->Init(ini);
-	 map<string, double>spectroResult;
-	 TPr::SendToProtocol("Запускаем сбор данных от спектроскопа...");
-	 spectroscope->Start();
-	 unsigned long tick = GetTickCount();
-	 bool bSpectroAnswer = false;
-	 while (GetTickCount() - tick < 10000)
-	 {
-	 Application->ProcessMessages();
-	 if (spectroscope->isDataReady())
-	 {
-	 bSpectroAnswer = true;
-	 TPr::SendToProtocol("Получены данные спектроскопа:");
-	 spectroResult = spectroscope->getSpectroData();
-	 UnicodeString data = "";
-	 for (map<string, double>::iterator i = spectroResult.begin();
-	 i != spectroResult.end(); i++)
-	 {
-	 data += UnicodeString((*i).first.c_str()) + " : " +
-	 FloatToStr(RoundTo((*i).second,-3)) + "; ";
-	 //FloatToStr((float)(*i).second) + "; ";
-	 }
-	 TPr::SendToProtocol(data);
-	 }
-	 }
-	 if (!bSpectroAnswer)
-	 TPr::SendToProtocol("Нет данных со спектроскопа.");
-	 spectroscope->Stop();
-	 TPr::SendToProtocol("Спектроскоп закрыт.");
-	 */
-}
 
-// ---------------------------------------------------------------------------
-
-void __fastcall TMainForm::menuSpectroSettingsClick(TObject *Sender) {
-	/*
-	 SpectroSettingForm = new TSpectroSettingForm(this);
-	 String str;
-	 int index;
-
-	 // Считываем данные для спектроскопа
-	 // ! Имя порта
-	 index = SpectroSettingForm->cbxSerialPort->Items->IndexOf
-	 (ini->ReadString("Spectroscope", "SerialPortName", "COM1"));
-	 SpectroSettingForm->cbxSerialPort->ItemIndex = index;
-	 // Скорость порта
-	 index = SpectroSettingForm->cbxBaudrate->Items->IndexOf
-	 (String(ini->ReadInteger("Spectroscope", "SerialBaudRate", 9600)));
-	 SpectroSettingForm->cbxBaudrate->ItemIndex = index;
-
-	 switch (ini->ReadInteger("Spectroscope", "SerialStopBits", 1))
-	 {
-	 case 2:
-	 str = L"2";
-	 break;
-	 case 3:
-	 str = L"1.5";
-	 break;
-	 case 1:
-	 default:
-	 str = L"1";
-	 };
-
-	 index = SpectroSettingForm->cbxStopBits->Items->IndexOf(str);
-	 SpectroSettingForm->cbxStopBits->ItemIndex = index;
-
-	 switch (ini->ReadInteger("Spectroscope", "SerialParity", 0))
-	 {
-	 case 1:
-	 str = L"Чётный";
-	 break;
-	 case 2:
-	 str = L"Нечётный";
-	 break;
-	 case 0:
-	 default:
-	 str = L"Отсутствует";
-	 break;
-	 };
-	 index = SpectroSettingForm->cbxParity->Items->IndexOf(str);
-	 SpectroSettingForm->cbxParity->ItemIndex = index;
-
-	 if (SpectroSettingForm->ShowModal() == mrOk)
-	 {
-	 ini->WriteString("Spectroscope", "SerialPortName",
-	 SpectroSettingForm->cbxSerialPort->Text);
-	 ini->WriteInteger("Spectroscope", "SerialBaudRate",
-	 SpectroSettingForm->cbxBaudrate->Text.ToInt());
-	 int serialStopBits;
-	 if (SpectroSettingForm->cbxStopBits->Text == "2")
-	 serialStopBits = 2;
-	 else if (SpectroSettingForm->cbxStopBits->Text == "1.5")
-	 serialStopBits = 1;
-	 else
-	 serialStopBits = 0;
-	 ini->WriteInteger("Spectroscope", "SerialStopBits", serialStopBits);
-	 int serialParity;
-	 if (SpectroSettingForm->cbxParity->Text == "Отсутствует")
-	 serialParity = 0;
-	 else if (SpectroSettingForm->cbxParity->Text == "Чётный")
-	 serialParity = 1;
-	 else if (SpectroSettingForm->cbxParity->Text == "Нечётный")
-	 serialParity = 2;
-	 ini->WriteInteger("Spectroscope", "SerialParity", serialParity);
-	 if (!spectroscope->Init(ini))
-	 {
-	 UnicodeString str = UnicodeString("Не удалось открыть порт ") +
-	 spectroscope->getName() +
-	 " \nдля приема данных со спестроскопа.";
-	 Application->MessageBox(str.c_str(), L"Ошибка");
-	 cbSpectrotest->Checked = false;
-	 ini->WriteBool("Spectroscope", "IsPresent", false);
-	 }
-	 }
-	 delete SpectroSettingForm;
-	 */
-}
-
-// ---------------------------------------------------------------------------
-void __fastcall TMainForm::cbSpectrotestClick(TObject *Sender) {
-	// ini->WriteBool("Spectroscope", "IsPresent", cbSpectrotest->Enabled);
-	// if (cbSpectrotest->Enabled)
-	// spectroscope->Init(ini);
-}
-
-// ---------------------------------------------------------------------------
 void __fastcall TMainForm::SolidGroupClick(TObject *Sender) {
 	if (NULL != sg) {
 		vector<double>data = lcard->getSolidGroupSignal();
@@ -1834,9 +1717,8 @@ void __fastcall TMainForm::pSolidGroupClick(TObject *Sender)
 					data.size() / 2, groupName, &result, &color);
 
 				pSolidGroup->Caption = groupName;
-				pSolidGroup->Color = clWhite;//color;
+				pSolidGroup->Color = clWhite;
 				pSolidGroup->Refresh();
-			   //	Caption = groupName;
 			}
 			else
 			{
