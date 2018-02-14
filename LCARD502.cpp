@@ -347,9 +347,9 @@ vector< vector<double> > LCard502::getMeasure(int firstSensorPosition,
 	return tempVector;
 }
 //---------------------------------------------------------------------------
-vector<double> LCard502::getSolidGroupSignal()
+void LCard502::getSolidGroupSignal(vector<double> &temp)
 {
-	std::vector<double> temp;
+//std::vector<double> temp;
 	__int64 size = getCountCollectedMeasurements();
 	int defSensorCount = Parameters.channels.size();
 	for(__int64 i = CountMeasurementsStartSolidGroup; i < size;  i+=Parameters.getCountChannels())
@@ -357,7 +357,7 @@ vector<double> LCard502::getSolidGroupSignal()
 		temp.push_back(( SourceData[i+defSensorCount+4] * voltToPercent[Parameters.others[4].range]*10 ));
 		temp.push_back(( SourceData[i+defSensorCount+5] * voltToPercent[Parameters.others[5].range]*10 ));
 	}
-	return temp;
+   //	return temp;
 }
 //---------------------------------------------------------------------------
 vector<double> LCard502::getFrameValue()
