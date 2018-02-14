@@ -1707,7 +1707,8 @@ void __fastcall TMainForm::pSolidGroupClick(TObject *Sender)
     	if(!Globals::defaultGroupCheck)
 		  {
 			if (NULL != sg) {
-				vector<double>data = lcard->getSolidGroupSignal();
+				vector<double>data;
+				lcard->getSolidGroupSignal(data);
 				wchar_t groupName[128];
 				double result;
 				unsigned color;

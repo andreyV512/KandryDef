@@ -141,7 +141,7 @@ class LCard502
 		//! Возвращает значение определенного канала платы АЦП (одиночное измерение)
 		vector<double> getFrameValue();
 		//! Возвращает массив токов и напряжений для группы прочностей
-		vector<double> getSolidGroupSignal();
+		void getSolidGroupSignal(vector<double> &);
 
 	private:
 		//! кол-во собранных измерений при старте продольного
