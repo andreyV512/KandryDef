@@ -968,7 +968,8 @@ void __fastcall TMainForm::CompleteWork(TObject *Sender)
 			if(!Globals::defaultGroupCheck)
 		  {
 			if (NULL != sg) {
-				vector<double>data = lcard->getSolidGroupSignal();
+				vector<double>data;
+				lcard->getSolidGroupSignal(data);
 				wchar_t groupName[128];
 				double result;
 				unsigned color;
@@ -1176,7 +1177,8 @@ void __fastcall TMainForm::menuSaveTubeClick(TObject *Sender)
 		  if(!Globals::defaultGroupCheck)
 		  {
 			if (NULL != sg) {
-				vector<double>data = lcard->getSolidGroupSignal();
+				vector<double>data;
+				lcard->getSolidGroupSignal(data);
 				wchar_t groupName[128];
 				double result;
 				unsigned color;
@@ -1690,7 +1692,8 @@ void TMainForm::SendResultToASM(void)
 
 void __fastcall TMainForm::SolidGroupClick(TObject *Sender) {
 	if (NULL != sg) {
-		vector<double>data = lcard->getSolidGroupSignal();
+		vector<double>data;
+		lcard->getSolidGroupSignal(data);
 		wchar_t groupName[128];
 		double result;
 		unsigned color;

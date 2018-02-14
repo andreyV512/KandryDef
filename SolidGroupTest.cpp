@@ -121,6 +121,7 @@ void __fastcall TSGForm::FormShow(TObject *Sender)
 
 void __fastcall TSGForm::bTestClick(TObject *Sender)
 {
+/*
 	bOpenTube->Enabled=false;
 	bSaveTube->Enabled=false;
 	eTestTime->Enabled=false;
@@ -164,6 +165,7 @@ void __fastcall TSGForm::bTestClick(TObject *Sender)
 	bSaveTube->Enabled=true;
 	eTestTime->Enabled=true;
 	bTest->Enabled=true;
+	*/
 }
 //---------------------------------------------------------------------------
 void TSGForm::DrawOnChart()
@@ -301,6 +303,7 @@ void __fastcall TSGForm::bSaveTubeClick(TObject *Sender)
 
 void __fastcall TSGForm::bShowCurrentTubeClick(TObject *Sender)
 {
+/*
 	tube_sg = Globals::tubeSG;                   //Точно не известно будет ли это работать без перегруженного оператора =
 	Signal = lcard->getSolidGroupSignal();
 	if(Signal.size()==0)
@@ -308,6 +311,7 @@ void __fastcall TSGForm::bShowCurrentTubeClick(TObject *Sender)
 	scbChartDragger->Position = 1;
 	curPos = 1;
 	DrawOnChart();
+	*/
 }
 //---------------------------------------------------------------------------
 void TSGForm::DrawThresholds()
