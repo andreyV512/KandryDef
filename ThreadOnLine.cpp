@@ -351,7 +351,7 @@ bool ThreadOnLine::OnlineCycle()
 			{
 				isTwoSpeed = true;
 				TPr::pr(String("Скорость торможения OutSpeed ") + String(OutSpeed));
-				if (!frConverter->setParameterSpeed
+				if ((WorkSpeed != OutSpeed) && !frConverter->setParameterSpeed
 					(Globals::defaultRotParameter, OutSpeed))
 					ErrFinally("Авария: Не удалось включить торможение",
 					&Collect, &result);
@@ -362,7 +362,7 @@ bool ThreadOnLine::OnlineCycle()
 			{
 				isFreeSpeed = true;
 				TPr::pr(String("Скорость в работе WorkSpeed ") + String(WorkSpeed));
-				if (!frConverter->setParameterSpeed
+				if ((WorkSpeed != InSpeed) && !frConverter->setParameterSpeed
 					(Globals::defaultRotParameter, WorkSpeed))
 					ErrFinally("Авария: Не удалось включить рабочую скорость",
 					&Collect, &result);
