@@ -433,12 +433,16 @@ object ADCSettForm: TADCSettForm
           'K'
           'E'
           'N80'
+          'P'
           'P110'
+          'Q'
           'Q125'
           'L'
           'M'
           'P'
+          'J55'
           'J-55'
+          'K55'
           'K-55'
           'C90'
           'T95'
@@ -446,7 +450,9 @@ object ADCSettForm: TADCSettForm
           'L80'
           'C95'
           'M65'
-          'N80Q')
+          'NQ'
+          'N80Q'
+          'K72')
       end
     end
     object FilterPAge: TTabSheet
