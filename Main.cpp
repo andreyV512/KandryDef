@@ -1623,6 +1623,8 @@ void TMainForm::NextTube(void)
 	LastSynchronizeReturnCode = true;
 }
 
+#define GROUP_NAME_NUM(num, name) else if (StandartSolidGroup == name)solid_num = num;
+
 void TMainForm::SendResultToASM(void)
 {
 	StatusBarBottom->Panels->Items[0]->Text = "";
@@ -1641,23 +1643,29 @@ void TMainForm::SendResultToASM(void)
 			AnsiString StandartSolidGroup
 				= ini->ReadString("OtherSettings","StandartSolidGroup","D");
 			if (StandartSolidGroup == "D")solid_num = 1;
-			else if (StandartSolidGroup == "K")solid_num = 2;
-			else if (StandartSolidGroup == "E")solid_num = 3;
-			else if (StandartSolidGroup == "N80")solid_num = 4;
-			else if (StandartSolidGroup == "P110")solid_num = 5;
-			else if (StandartSolidGroup == "Q125")solid_num = 6;
-			else if (StandartSolidGroup == "L")solid_num = 7;
-			else if (StandartSolidGroup == "M")solid_num = 8;
-			else if (StandartSolidGroup == "P")solid_num = 9;
-			else if (StandartSolidGroup == "J-55")solid_num = 10;
-			else if (StandartSolidGroup == "K-55")solid_num = 11;
-			else if (StandartSolidGroup == "C90")solid_num = 12;
-			else if (StandartSolidGroup == "T95")solid_num = 13;
-			else if (StandartSolidGroup == "H40")solid_num = 14;
-			else if (StandartSolidGroup == "L80")solid_num = 15;
-			else if (StandartSolidGroup == "C95")solid_num = 16;
-			else if (StandartSolidGroup == "M65")solid_num = 17;
-			else if (StandartSolidGroup == "N80Q")solid_num = 18;
+			GROUP_NAME_NUM(2, "K")
+			GROUP_NAME_NUM(3, "E")
+			GROUP_NAME_NUM(4, "N80)
+			GROUP_NAME_NUM(5, "P")
+			GROUP_NAME_NUM(5, "P110")
+			GROUP_NAME_NUM(6, "Q")
+			GROUP_NAME_NUM(6, "Q125")
+			GROUP_NAME_NUM(7, "L")
+			GROUP_NAME_NUM(8, "M")
+			GROUP_NAME_NUM(9, "P")
+			GROUP_NAME_NUM(10, "J55")
+			GROUP_NAME_NUM(10, "J-55")
+			GROUP_NAME_NUM(11, "K55")
+			GROUP_NAME_NUM(11, "K-55")
+			GROUP_NAME_NUM(12, "C90")
+			GROUP_NAME_NUM(13, "T95")
+			GROUP_NAME_NUM(14, "H40")
+			GROUP_NAME_NUM(15, "L80")
+			GROUP_NAME_NUM(16, "C95")
+			GROUP_NAME_NUM(17, "M65")
+			GROUP_NAME_NUM(18, "NQ")
+			GROUP_NAME_NUM(18, "N80Q")
+			GROUP_NAME_NUM(19, "K72")
 			else solid_num = 1;
 			//------------------------
 			int iter = 0;
@@ -1687,7 +1695,7 @@ void TMainForm::SendResultToASM(void)
 	if (IsSendResultToProtocol)
 		MyCom->SendToProtocol();
 }
-
+#undef GROUP_NAME_NUM
 // --------------------------------------------------------------------------------
 
 void __fastcall TMainForm::SolidGroupClick(TObject *Sender) {
