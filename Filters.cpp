@@ -69,7 +69,6 @@ void Filters::toFilter(double *data, int N)
 			break;
 		}
 	}
-	for(int i = 0; i < 20 && i < N; ++i){data[i] = 0;};
 }
 void Filters::setSettingsFromIniFile(String type)
 {

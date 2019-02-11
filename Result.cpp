@@ -144,13 +144,63 @@ void Result::ComputeZoneData(bool isLinear)
 
 			if(SystemConst::isLinearDigitalFilter && isLinear)
 			{
-				LinearFilter->toFilter(&Filtered_Data[j][i][0],Filtered_Data[j][i].size());
+                if(j > 0)
+				{
+					std::vector<double> buf;
+					buf.resize(Filtered_Data[j - 1][i].size() + Filtered_Data[j][i].size());
+					int k = 0;
+					for(; k < Filtered_Data[j - 1][i].size(); ++k)
+					{
+						 buf[k] =  Filtered_Data[j - 1][i][k];
+					}
+					int half = k;
+					for(; k < buf.size(); ++k)
+					{
+						buf[k] = Filtered_Data[j][i][k - half];
+					}
+
+					LinearFilter->toFilter(&buf[0],buf.size());
+					for(int k = 0; k < Filtered_Data[j][i].size(); ++k)
+					{
+						Filtered_Data[j][i][k] = buf[k + half];
+					}
+				}
+				else
+				{
+					 LinearFilter->toFilter(&Filtered_Data[j][i][0],Filtered_Data[j][i].size());
+				}
 				data[j][i] = Abs(Filtered_Data[j][i]);
+
 			}
 			if(SystemConst::isCrossDigitalFilter && !isLinear)
 			{
-				CrossFilter->toFilter(&Filtered_Data[j][i][0],Filtered_Data[j][i].size());
+				if(j > 0)
+				{
+					std::vector<double> buf;
+					buf.resize(Filtered_Data[j - 1][i].size() + Filtered_Data[j][i].size());
+					int k = 0;
+					for(; k < Filtered_Data[j - 1][i].size(); ++k)
+					{
+						 buf[k] =  Filtered_Data[j - 1][i][k];
+					}
+					int half = k;
+					for(; k < buf.size(); ++k)
+					{
+						buf[k] = Filtered_Data[j][i][k - half];
+					}
+
+					CrossFilter->toFilter(&buf[0],buf.size());
+					for(int k = 0; k < Filtered_Data[j][i].size(); ++k)
+					{
+						Filtered_Data[j][i][k] = buf[k + half];
+					}
+				}
+				else
+				{
+					 CrossFilter->toFilter(&Filtered_Data[j][i][0],Filtered_Data[j][i].size());
+				}
 				data[j][i] = Abs(Filtered_Data[j][i]);
+
 			}
 
 			//макс. значение по датчику в текущей зоне
