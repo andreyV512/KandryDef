@@ -60,6 +60,7 @@ private:
 	//! Длина зоны
 	int zone_length;
 
+	void Filtre(class Filters *, int zone, int sensor);
 
 public:
 	//! Дефолтный конструктор для наследников

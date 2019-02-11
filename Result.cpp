@@ -124,6 +124,36 @@ Result::~Result()
 	zone_data.~DynamicArray();
 }
 //---------------------------------------------------------------------------
+
+void Result::Filtre(Filters *filter, int j, int i)
+{
+		if(j > 0)
+				{
+					std::vector<double> buf;
+					buf.resize(Filtered_Data[j - 1][i].size() + Filtered_Data[j][i].size());
+					int k = 0;
+					for(; k < Filtered_Data[j - 1][i].size(); ++k)
+					{
+						 buf[k] =  Filtered_Data[j - 1][i][k];
+					}
+					int half = k;
+					for(; k < buf.size(); ++k)
+					{
+						buf[k] = Filtered_Data[j][i][k - half];
+					}
+
+					filter->toFilter(&buf[0],buf.size());
+					for(int k = 0; k < Filtered_Data[j][i].size(); ++k)
+					{
+						Filtered_Data[j][i][k] = buf[k + half];
+					}
+				}
+				else
+				{
+					 filter->toFilter(&Filtered_Data[j][i][0],Filtered_Data[j][i].size());
+				}
+}
+
 void Result::ComputeZoneData(bool isLinear)
 {
 // пробегает по всем значениям, выискивая максимальные дефекты по зонам и датчикам
@@ -144,7 +174,8 @@ void Result::ComputeZoneData(bool isLinear)
 
 			if(SystemConst::isLinearDigitalFilter && isLinear)
 			{
-                if(j > 0)
+			/*
+				if(j > 0)
 				{
 					std::vector<double> buf;
 					buf.resize(Filtered_Data[j - 1][i].size() + Filtered_Data[j][i].size());
@@ -169,11 +200,14 @@ void Result::ComputeZoneData(bool isLinear)
 				{
 					 LinearFilter->toFilter(&Filtered_Data[j][i][0],Filtered_Data[j][i].size());
 				}
+				*/
+				Filtre(LinearFilter, j, i);
 				data[j][i] = Abs(Filtered_Data[j][i]);
 
 			}
 			if(SystemConst::isCrossDigitalFilter && !isLinear)
 			{
+			/*
 				if(j > 0)
 				{
 					std::vector<double> buf;
@@ -199,6 +233,8 @@ void Result::ComputeZoneData(bool isLinear)
 				{
 					 CrossFilter->toFilter(&Filtered_Data[j][i][0],Filtered_Data[j][i].size());
 				}
+				*/
+				Filtre(CrossFilter, j, i);
 				data[j][i] = Abs(Filtered_Data[j][i]);
 
 			}
@@ -320,13 +356,15 @@ void Result::medianfilter(double* signal, double* result, int N)
 		if(SystemConst::isLinearDigitalFilter && isLinear)
 		{
 			Filtered_Data[zones][i] = new_data[i];
-			LinearFilter->toFilter(&Filtered_Data[zones][i][0],Filtered_Data[zones][i].size());
+			//LinearFilter->toFilter(&Filtered_Data[zones][i][0],Filtered_Data[zones][i].size());
+			Filtre(LinearFilter, zones, i);
 			data[zones][i] = Abs(Filtered_Data[zones][i]);
 		}
 		else if(SystemConst::isCrossDigitalFilter && !isLinear)
 		{
 			Filtered_Data[zones][i] = new_data[i];
-			CrossFilter->toFilter(&Filtered_Data[zones][i][0],Filtered_Data[zones][i].size());
+			//CrossFilter->toFilter(&Filtered_Data[zones][i][0],Filtered_Data[zones][i].size());
+			Filtre(CrossFilter, zones, i);
 			data[zones][i] = Abs(Filtered_Data[zones][i]);
 		}
 		else
