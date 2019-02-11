@@ -1645,7 +1645,7 @@ void TMainForm::SendResultToASM(void)
 			if (StandartSolidGroup == "D")solid_num = 1;
 			GROUP_NAME_NUM(2, "K")
 			GROUP_NAME_NUM(3, "E")
-			GROUP_NAME_NUM(4, "N80)
+			GROUP_NAME_NUM(4, "N80")
 			GROUP_NAME_NUM(5, "P")
 			GROUP_NAME_NUM(5, "P110")
 			GROUP_NAME_NUM(6, "Q")
